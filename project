@@ -1,0 +1,269 @@
+# Simple in-memory storage for bookings
+bookings = []
+
+# Costs and seat limits for different travel options based on destination
+destination_costs = {
+    "mumbai": {
+        "train": {"ac": 3000, "general": 1500, "seats": 200},
+        "bus": {"sleeper": 4000, "normal": 2500, "seats": 60},
+        "flight": {"economy": 7000, "business": 12000, "seats": 100}
+    },
+    "bengaluru": {
+        "train": {"ac": 350, "general": 200, "seats": 200},
+        "bus": {"sleeper": 700, "normal": 400, "seats": 60},
+        "flight": {"economy": 2000, "business": 3500, "seats": 100}
+    },
+    "hyderabad": {
+        "train": {"ac": 2500, "general": 1500, "seats": 200},
+        "bus": {"sleeper": 1000, "normal": 600, "seats": 60},
+        "flight": {"economy": 5000, "business": 8000, "seats": 100}
+    },
+    "delhi": {
+        "train": {"ac": 2500, "general": 1000, "seats": 200},
+        "bus": {"sleeper": 3500, "normal": 2000, "seats": 60},
+        "flight": {"economy": 10000, "business": 15000, "seats": 100}
+    },
+    "ayodhya": {
+        "train": {"ac": 5000, "general": 3000, "seats": 200},
+        "bus": {"sleeper": 2000, "normal": 1200, "seats": 60},
+        "flight": None
+    }
+}
+
+# Timings for each travel option based on destination
+destination_timings = {
+    "mumbai": {
+        "train": ["6:00 AM", "12:00 PM", "6:00 PM"],
+        "bus": ["8:00 AM", "2:00 PM", "8:00 PM"],
+        "flight": ["9:00 AM", "3:00 PM", "9:00 PM"]
+    },
+    "bengaluru": {
+        "train": ["5:30 AM", "11:30 AM", "5:30 PM"],
+        "bus": ["7:30 AM", "1:30 PM", "7:30 PM"],
+        "flight": ["10:00 AM", "4:00 PM", "10:00 PM"]
+    },
+    "hyderabad": {
+        "train": ["6:30 AM", "12:30 PM", "6:30 PM"],
+        "bus": ["9:00 AM", "3:00 PM", "9:00 PM"],
+        "flight": ["11:00 AM", "5:00 PM", "11:00 PM"]
+    },
+    "delhi": {
+        "train": ["7:00 AM", "1:00 PM", "7:00 PM"],
+        "bus": ["8:30 AM", "2:30 PM", "8:30 PM"],
+        "flight": ["12:00 PM", "6:00 PM", "12:00 AM"]
+    },
+    "ayodhya": {
+        "train": ["5:00 AM", "11:00 AM", "5:00 PM"],
+        "bus": ["9:30 AM", "3:30 PM", "9:30 PM"],
+        "flight": None
+    }
+}
+
+# List of destinations and corresponding keys
+destinations = list(destination_costs.keys())
+destination_keys = ['m', 'b', 'h', 'd', 'a']
+
+# Travel option and class maps
+travel_option_map = {
+    't': 'train',
+    'b': 'bus',
+    'f': 'flight'
+}
+
+travel_class_map = {
+    'train': {'a': 'ac', 'g': 'general'},
+    'bus': {'s': 'sleeper', 'n': 'normal'},
+    'flight': {'b': 'business', 'e': 'economy'}
+}
+
+def create_booking():
+    customer_name = input("Enter customer name: ")
+    
+    print("\nAvailable destinations:")
+    for key, destination in zip(destination_keys, destinations):
+        print(f"- {key.upper()}: {destination.capitalize()}")
+
+    destination_key = input("Press the corresponding key for your destination: ").lower()
+    while destination_key not in destination_keys:
+        destination_key = input("Invalid option. Please choose again: ").lower()
+    destination = destinations[destination_keys.index(destination_key)]
+
+    print("\nAvailable travel options: T (Train), B (Bus), F (Flight)")
+    travel_option_key = input("Enter travel option: ").lower()
+    while travel_option_key not in travel_option_map:
+        travel_option_key = input("Invalid option. Please choose again: ").lower()
+    travel_option = travel_option_map[travel_option_key]
+
+    if destination_costs[destination][travel_option] is None:
+        print("No flights available for this destination.")
+        return
+
+    # Show available classes and their costs
+    print(f"\nAvailable classes for {travel_option.capitalize()}:")
+    for key, class_name in travel_class_map[travel_option].items():
+        cost = destination_costs[destination][travel_option][class_name]
+        print(f"- {key.upper()}: {class_name.capitalize()} (Cost: {cost})")
+
+    travel_class_key = input("Choose class: ").lower()
+    while travel_class_key not in travel_class_map[travel_option]:
+        travel_class_key = input("Invalid class. Please choose again: ").lower()
+    travel_class = travel_class_map[travel_option][travel_class_key]
+
+    # Check available seats
+    available_seats = destination_costs[destination][travel_option]["seats"]
+    seats_required = int(input(f"Enter number of seats (Available: {available_seats}): "))
+    while seats_required < 1 or seats_required > available_seats:
+        seats_required = int(input(f"Invalid number of seats. Enter again (Available: {available_seats}): "))
+
+    # Select timing
+    print(f"\nAvailable timings for {travel_option.capitalize()} to {destination.capitalize()}:")
+    timings = destination_timings[destination][travel_option]
+    for i, timing in enumerate(timings, start=1):
+        print(f"- {i}: {timing}")
+
+    time_choice = int(input("Choose a timing by number: "))
+    while time_choice < 1 or time_choice > len(timings):
+        time_choice = int(input("Invalid choice. Please choose again: "))
+    chosen_time = timings[time_choice - 1]
+
+    date = input("Enter travel date (YYYY-MM-DD): ")
+    cost = destination_costs[destination][travel_option][travel_class] * seats_required
+
+    booking = {
+        'customer_name': customer_name,
+        'travel_option': travel_option,
+        'destination': destination,
+        'travel_class': travel_class,
+        'date': date,
+        'time': chosen_time,
+        'cost': cost,
+        'seats': seats_required,
+        'status': 'Booked'
+    }
+    bookings.append(booking)
+    print(f"Booking created: {booking}")
+
+def read_bookings():
+    if not bookings:
+        print("No bookings available.")
+    else:
+        print("\nCurrent Bookings:")
+        for booking in bookings:
+            print(booking)
+
+def update_booking():
+    customer_name = input("Enter customer name to update booking: ")
+    for booking in bookings:
+        if booking['customer_name'].lower() == customer_name.lower():
+            print("\nAvailable destinations:")
+            for key, destination in zip(destination_keys, destinations):
+                print(f"- {key.upper()}: {destination.capitalize()}")
+
+            destination_key = input("Press the corresponding key for new destination: ").lower()
+            while destination_key not in destination_keys:
+                destination_key = input("Invalid option. Please choose again: ").lower()
+            destination = destinations[destination_keys.index(destination_key)]
+
+            print("\nAvailable travel options: T (Train), B (Bus), F (Flight)")
+            travel_option_key = input("Enter new travel option: ").lower()
+            while travel_option_key not in travel_option_map:
+                travel_option_key = input("Invalid option. Please choose again: ").lower()
+            travel_option = travel_option_map[travel_option_key]
+
+            if destination_costs[destination][travel_option] is None:
+                print("No flights available for this destination.")
+                return
+
+            print(f"\nAvailable classes for {travel_option.capitalize()}:")
+            for key, class_name in travel_class_map[travel_option].items():
+                cost = destination_costs[destination][travel_option][class_name]
+                print(f"- {key.upper()}: {class_name.capitalize()} (Cost: {cost})")
+
+            travel_class_key = input("Choose new class: ").lower()
+            while travel_class_key not in travel_class_map[travel_option]:
+                travel_class_key = input("Invalid class. Please choose again: ").lower()
+            travel_class = travel_class_map[travel_option][travel_class_key]
+
+            available_seats = destination_costs[destination][travel_option]["seats"]
+            seats_required = int(input(f"Enter new number of seats (Available: {available_seats}): "))
+            while seats_required < 1 or seats_required > available_seats:
+                seats_required = int(input(f"Invalid number of seats. Enter again (Available: {available_seats}): "))
+
+            print(f"\nAvailable timings for {travel_option.capitalize()} to {destination.capitalize()}:")
+            timings = destination_timings[destination][travel_option]
+            for i, timing in enumerate(timings, start=1):
+                print(f"- {i}: {timing}")
+
+            time_choice = int(input("Choose a new timing by number: "))
+            while time_choice < 1 or time_choice > len(timings):
+                time_choice = int(input("Invalid choice. Please choose again: "))
+            chosen_time = timings[time_choice - 1]
+
+            booking['travel_option'] = travel_option
+            booking['destination'] = destination
+            booking['travel_class'] = travel_class
+            booking['date'] = input("Enter new travel date (YYYY-MM-DD): ")
+            booking['time'] = chosen_time
+            booking['cost'] = destination_costs[destination][travel_option][travel_class] * seats_required
+            booking['seats'] = seats_required
+            booking['status'] = input("Enter new status: ")
+            print(f"Booking updated: {booking}")
+            return
+    print("Booking not found.")
+
+def delete_booking():
+    customer_name = input("Enter customer name to delete booking: ")
+    global bookings
+    bookings = [booking for booking in bookings if booking['customer_name'].lower() != customer_name.lower()]
+    print(f"Booking for customer '{customer_name}' deleted.")
+
+def generate_invoice(booking):
+    print("\n--- Travel Invoice ---")
+    print(f"Customer Name: {booking['customer_name']}")
+    print(f"Destination: {booking['destination'].capitalize()}")
+    print(f"Travel Option: {booking['travel_option'].capitalize()}")
+    print(f"Travel Class: {booking['travel_class'].capitalize()}")
+    print(f"Travel Date: {booking['date']}")
+    print(f"Travel Time: {booking['time']}")
+    print(f"Number of Seats: {booking['seats']}")
+    print(f"Cost: {booking['cost']}")
+    print(f"Status: {booking['status']}")
+    print("----------------------")
+
+def main():
+    while True:
+        print("\n--- Travel Booking System ---")
+        print("1. Create Booking")
+        print("2. Read Bookings")
+        print("3. Update Booking")
+        print("4. Delete Booking")
+        print("5. Generate Invoice")
+        print("6. Exit")
+        
+        choice = input("Choose an option (1-6): ").lower()
+        
+        if choice == '1':
+            create_booking()
+        elif choice == '2':
+            read_bookings()
+        elif choice == '3':
+            update_booking()
+        elif choice == '4':
+            delete_booking()
+        elif choice == '5':
+            customer_name = input("Enter customer name for invoice: ")
+            for booking in bookings:
+                if booking['customer_name'].lower() == customer_name.lower():
+                    generate_invoice(booking)
+                    break
+            else:
+                print("Booking not found.")
+        elif choice == '6':
+            print("Exiting the system.")
+            break
+        else:
+            print("Invalid choice, please try again.")
+
+if __name__ == "__main__":
+    main()
+    
